@@ -1,0 +1,8 @@
+---
+
+- name: reboot server
+  shell: "sleep 2 && shutdown -r now 'Ansible rebooted server'"
+  async: 1
+  poll: 0
+  ignore_errors: true
+  when: coreos_reboot_after_bootstrap

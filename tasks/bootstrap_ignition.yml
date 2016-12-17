@@ -1,0 +1,13 @@
+---
+
+- name: create ignition configuration file
+  template:
+    src: "coreos_ignition.json.j2"
+    dest: "/tmp/coreos_ignition.json"
+
+- name: backup ignition file from core hosts
+  fetch:
+    src: "/tmp/coreos_ignition.json"
+    dest: "{{coreos_dump_ignition_cloudinit_dest}}/{{inventory_hostname}}_ignition.json"
+    flat: yes
+  when: coreos_dump_ignition_cloudinit_config

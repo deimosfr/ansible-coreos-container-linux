@@ -1,0 +1,16 @@
+---
+
+- name: create cloudinit configuration file
+  template:
+    src: "coreos_cloudinit.yml.j2"
+    dest: "/tmp/coreos_cloudinit.yml"
+
+- name: check cloudinit syntax
+  command: "coreos-cloudinit -validate --from-file /tmp/coreos_cloudinit.yml"
+
+- name: backup cloudinit file from core hosts
+  fetch:
+    src: "/tmp/coreos_cloudinit.yml"
+    dest: "{{coreos_dump_ignition_cloudinit_dest}}/{{inventory_hostname}}_cloudinit.yml"
+    flat: yes
+  when: coreos_dump_ignition_cloudinit_config

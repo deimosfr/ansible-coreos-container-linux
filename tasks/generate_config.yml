@@ -1,0 +1,17 @@
+---
+
+- name: create ignition configuration file locally
+  template:
+    src: "coreos_ignition.yml.j2"
+    dest: "{{coreos_dump_ignition_cloudinit_dest}}/{{inventory_hostname}}_cloudinit.yml"
+  delegate_to: localhost
+  when: coreos_bootstrap_ignition
+
+- name: create cloudinit configuration file locally
+  template:
+    src: "coreos_cloudinit.yml.j2"
+    dest: "{{coreos_dump_ignition_cloudinit_dest}}/{{inventory_hostname}}_cloudinit.yml"
+  delegate_to: localhost
+  when: coreos_bootstrap_cloudinit
+
+- meta: end_play

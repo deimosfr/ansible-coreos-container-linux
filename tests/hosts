@@ -1,0 +1,21 @@
+[local]
+localhost
+
+[coreos-masters]
+core01.myfqdn.com pub_ip=222.2.1.199 priv_ip=172.17.8.101
+core02.myfqdn.com pub_ip=222.2.1.198 priv_ip=172.17.8.102
+core03.myfqdn.com pub_ip=222.2.1.197 priv_ip=172.17.8.103
+
+[coreos-workers]
+core04.myfqdn.com pub_ip=222.2.1.196 priv_ip=172.17.8.104
+core05.myfqdn.com pub_ip=222.2.1.195 priv_ip=172.17.8.105
+core06.myfqdn.com pub_ip=222.2.1.194 priv_ip=172.17.8.106
+
+[coreos-nodes:children]
+coreos-masters
+coreos-workers
+
+[coreos-nodes:vars]
+ansible_ssh_user=core
+ansible_python_interpreter="/opt/python/bin/python"
+priv_if=enp0s8

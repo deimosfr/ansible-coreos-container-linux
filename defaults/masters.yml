@@ -1,0 +1,13 @@
+coreos_etcd_config:
+  name: "{{inventory_hostname}}"
+  discovery-srv: "myfqdn.com"
+  advertise-client-urls: "http://{{priv_ip}}:2379"
+  initial-advertise-peer-urls: "http://{{priv_ip}}:2380"
+  listen-peer-urls: "http://{{priv_ip}}:2380,http://{{priv_ip}}:7001"
+  listen-client-urls: "http://0.0.0.0:2379,http://0.0.0.0:4001"
+  initial-cluster-token: 'cluster01-prod'
+  initial-cluster-state: 'new'
+
+coreos_fleet_config:
+  public-ip: "{{coreos_public_ip}}"
+  metadata: "{{coreos_fleet_metadata}}"

@@ -1,0 +1,13 @@
+---
+
+- include: generate_config.yml
+  when: coreos_generate_only
+
+- include: bootstrap_ignition.yml
+  when: coreos_bootstrap_ignition and coreos_generate_only == False
+
+- include: bootstrap_cloudinit.yml
+  when: coreos_bootstrap_cloudinit and coreos_generate_only == False
+
+- include: bootstrap_launch.yml
+  when: coreos_launch_bootstrap and coreos_generate_only == False

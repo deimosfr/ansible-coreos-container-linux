@@ -1,0 +1,20 @@
+---
+
+- name: launch coreos-install
+  command: >
+    coreos-install
+    -d {{coreos_device_install}}
+    -C {{coreos_channel}}
+    {% if coreos_bootstrap_cloudinit %}-c /tmp/coreos_cloudinit.yml{% endif %}
+    {% if coreos_bootstrap_ignition %}-i /tmp/coreos_ignition.json{% endif %}
+    {% if coreos_image_base_url %}-b {{coreos_image_base_url}}{% endif %}
+    {% if coreos_image_version %}-V {{coreos_image_version}}{% endif %}
+    {{coreos_install_additional_options}}
+  notify: reboot server
+
+- name: eject cdrom
+  command: eject
+  when: coreos_eject_cd_before_reboot
+  ignore_errors: yes
+
+- meta: flush_handlers

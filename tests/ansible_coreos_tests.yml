@@ -1,0 +1,77 @@
+---
+
+- name: coreos-ansible
+  hosts: localhost
+  gather_facts: False
+  tasks:
+    - include: ../../deimosfr.coreos-ansible/tasks/ansible_prerequisites.yml
+  vars:
+    ansible_python_interpreter: "/usr/bin/python"
+    coreos_role_path: "{{playbook_dir}}/.."
+    coreos_ansible_role_path: "{{playbook_dir}}/../../deimosfr.coreos-ansible"
+
+- name: coreos-ansible
+  hosts: coreos-nodes
+  user: core
+  become: yes
+  gather_facts: False
+  roles:
+    - deimosfr.coreos-ansible
+  vars:
+    coreos_ansible_role_path: "{{playbook_dir}}/../../deimosfr.coreos-ansible"
+
+- name: coreos-bootstrap
+  hosts: coreos-nodes
+  user: core
+  become: yes
+  tasks:
+    - name: get raid device info
+      stat:
+        path: '/dev/md0'
+      register: raid_device
+      changed_when: false
+
+    - name: get raid status
+      command: 'mdadm --detail /dev/md0'
+      register: raid_status
+      changed_when: false
+
+    - name: get etcd cluster info
+      command: 'etcdctl cluster-health'
+      register: etcd_status
+      changed_when: false
+
+    - name: get fleet cluster info
+      command: 'fleetctl list-machines'
+      register: fleet_status
+      changed_when: false
+
+    - name: ensure raid device is block device
+      assert:
+        that:
+          - raid_device.stat.isblk
+          - "'State : clean' in raid_status.stdout"
+
+    - name: ensure services are started
+      service:
+        name: "{{item}}"
+        state: started
+      with_items:
+        - systemd-modules-load
+        - systemd-sysctl
+        - systemd-timesyncd
+        - etcd2
+        - fleet
+        - flanneld
+        - docker
+
+    - name: ensure cluster services are ok
+      assert:
+        that:
+          - "'cluster is healthy' in etcd_status.stdout"
+          - "fleet_status.rc == 0"
+          - "ansible_flannel0.active"
+
+  vars:
+    ansible_ssh_user: core
+    ansible_python_interpreter: "/opt/python/bin/python"

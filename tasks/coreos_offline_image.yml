@@ -1,0 +1,32 @@
+---
+
+- name: ensure local folders exists
+  file:
+    path: "{{coreos_role_path}}/files/coreos_images/{{coreos_image_version}}"
+    mode: 0755
+    recurse: yes
+    state: 'directory'
+  become: false
+  delegate_to: 127.0.0.1
+
+- name: check if coreos image is locally downloaded
+  raw: "stat {{coreos_role_path}}/files/coreos_images/{{coreos_image_version}}/{{coreos_image_name}}"
+  register: coreos_image_downloaded
+  become: false
+  ignore_errors: True
+  delegate_to: 127.0.0.1
+  changed_when: false
+
+- name: download coreos image locally
+  get_url:
+    url: "{{coreos_image_src_url}}/{{item}}"
+    dest: "{{coreos_role_path}}/files/coreos_images/{{coreos_image_version}}/{{item}}"
+  with_items:
+    - "{{coreos_image_name}}"
+    - "{{coreos_image_name}}.DIGESTS"
+    - "{{coreos_image_name}}.DIGESTS.asc"
+    - "{{coreos_image_name}}.sig"
+    - "version.txt"
+  become: false
+  delegate_to: 127.0.0.1
+  when: coreos_image_downloaded | failed
