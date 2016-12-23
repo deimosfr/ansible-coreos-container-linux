@@ -1,7 +1,9 @@
-CoreOS Role
-===========
+Ansible CoreOS Container Linux Role
+===================================
 
 This role bootstrap a complete CoreOS cluster with Cloudinit or/and Ignition.
+
+[![asciicast](https://asciinema.org/a/amjt78r5c2gsz0c8gf5fk9p3z.png)](https://asciinema.org/a/amjt78r5c2gsz0c8gf5fk9p3z)
 
 Requirements
 ------------

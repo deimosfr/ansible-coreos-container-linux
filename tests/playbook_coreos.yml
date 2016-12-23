@@ -7,7 +7,7 @@
     - include: ../../deimosfr.coreos-ansible/tasks/ansible_prerequisites.yml
   vars:
     ansible_python_interpreter: "/usr/bin/python"
-    coreos_role_path: "{{playbook_dir}}/../../deimosfr.coreos-ansible"
+    coreos_ansible_role_path: "{{playbook_dir}}/../../deimosfr.coreos-ansible"
 
 - name: coreos image offline mode
   hosts: localhost
@@ -30,6 +30,8 @@
   gather_facts: False
   roles:
     - deimosfr.coreos-ansible
+  vars:
+    coreos_ansible_role_path: "{{playbook_dir}}/../../deimosfr.coreos-ansible"
 
 - name: coreos-bootstrap
   hosts: coreos-masters
@@ -39,6 +41,7 @@
     - deimosfr.coreos-container-linux
   vars:
     coreos_image_base_url: "http://222.2.1.152:8000/coreos_images"
+    coreos_ansible_role_path: "{{playbook_dir}}/../../deimosfr.coreos-ansible"
   vars_files:
     - "{{playbook_dir}}/../defaults/masters.yml"
 
@@ -50,5 +53,6 @@
     - deimosfr.coreos-container-linux
   vars:
     coreos_image_base_url: "http://222.2.1.152:8000/coreos_images"
+    coreos_ansible_role_path: "{{playbook_dir}}/../../deimosfr.coreos-ansible"
   vars_files:
     - "{{playbook_dir}}/../defaults/workers.yml"
