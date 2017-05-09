@@ -23,6 +23,9 @@ coreos_token: "79a411c535cb6601ddbbb8c60ab854a7"
 # Choose reboot strategy between: etcd-lock, reboot and off
 coreos_reboot_strategy: "off"
 
+# Do not perform cloudinit syntax
+coreos_cloudinit_check_syntax: false
+
 # Only generate config files locally, do not deploy (useful when you can't connect or with some providers)
 coreos_generate_only: false
 
@@ -283,6 +286,8 @@ ansible_ssh_user=core
 ansible_python_interpreter="/opt/python/bin/python"
 priv_if=enp0s8
 ```
+
+Then use a playbook like this one (do not forget to edit vars with yours from the default folder):
 
 ```yaml
 ---

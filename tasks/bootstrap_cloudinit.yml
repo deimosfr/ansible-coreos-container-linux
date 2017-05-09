@@ -7,6 +7,7 @@
 
 - name: check cloudinit syntax
   command: "coreos-cloudinit -validate --from-file /tmp/coreos_cloudinit.yml"
+  when: coreos_cloudinit_check_syntax
 
 - name: backup cloudinit file from core hosts
   fetch:
