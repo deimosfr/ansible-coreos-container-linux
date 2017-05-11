@@ -19,12 +19,9 @@ Role Variables
 # Choose CoreOS channel between stable, beta or alpha channels
 coreos_channel: "stable"
 # Generate a token: https://discovery.etcd.io/new?size=3
-coreos_token: "79a411c535cb6601ddbbb8c60ab854a7"
+coreos_token: "enter your token here"
 # Choose reboot strategy between: etcd-lock, reboot and off
 coreos_reboot_strategy: "off"
-
-# Do not perform cloudinit syntax
-coreos_cloudinit_check_syntax: false
 
 # Only generate config files locally, do not deploy (useful when you can't connect or with some providers)
 coreos_generate_only: false
@@ -32,7 +29,7 @@ coreos_generate_only: false
 # Download image locally to avoid downloading it for every nodes
 coreos_image_offline: false
 # Set CoreOS offline version (do not use current in offline mode)
-coreos_image_version: '1185.5.0'
+coreos_image_version: '1353.7.0'
 # Set image name to download
 coreos_image_name: 'coreos_production_ami_image.bin.bz2'
 # Define source image url to locally download image
@@ -59,6 +56,7 @@ coreos_fleet_metadata: "cluster=dev"
 # If true, will bootstrap the server (data may be lost),
 # else config files will be generated
 coreos_launch_bootstrap: true
+coreos_cloudinit_check_syntax: true
 coreos_device_install: "/dev/sda"
 coreos_install_additional_options: ""
 coreos_eject_cd_before_reboot: true
@@ -112,6 +110,7 @@ coreos_cloudinit:
     units:
     - name: prepare-data-drive.service
       command: start
+      enable: true
       content: |
         [Unit]
         Description=Prepare data drive
@@ -138,6 +137,7 @@ coreos_cloudinit:
         ExecStart=/usr/sbin/mkfs.ext4 -m 1 -F /dev/raid-vg/data
     - name: mnt-data.mount
       command: start
+      enable: true
       content: |
         [Unit]
         After=prepare-data-drive.service
@@ -161,11 +161,15 @@ coreos_cloudinit:
         Name={{coreos_private_if}}
         [Network]
         Address={{coreos_private_ip}}/24
-    - name: iptables-restore.service
-      enable: true
+    - name: serial-getty@ttyS1.service
       command: start
+      enable: true
+    - name: iptables-restore.service
+      command: start
+      enable: true
     - name: settimezone.service
       command: start
+      enable: true
       content: |
         [Unit]
         Description=Set the time zone
@@ -179,10 +183,27 @@ coreos_cloudinit:
       command: restart
     - name: systemd-timesyncd.service
       command: start
+      enable: true
     - name: mdmonitor.service
       command: stop
-    - name: etcd2.service
+      enable: false
+    - name: etcd-member.service
       command: start
+      enable: true
+      drop-ins:
+        - name: 01-start-after-network.conf
+          content: |
+            [Unit]
+            Wants=network-online.target
+            After=network-online.target
+        - name: 40-etcd-cluster.conf
+          content: |
+            [Service]
+            Environment="ETCD_ADVERTISE_CLIENT_URLS=http://{{priv_ip}}:2379"
+            Environment="ETCD_DISCOVERY=https://discovery.etcd.io/{{coreos_token}}"
+            Environment="ETCD_INITIAL_ADVERTISE_PEER_URLS=http://{{priv_ip}}:2380"
+            Environment="ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379"
+            Environment="ETCD_LISTEN_PEER_URLS=http://{{priv_ip}}:2380"
     - name: fleet.service
       command: start
     - name: docker.service
@@ -211,11 +232,6 @@ coreos_cloudinit:
   write_files:
   - path: "/home/core/.toolboxrc"
     owner: core
-    content: |
-      TOOLBOX_DOCKER_IMAGE={{coreos_toolbox_docker_image}}
-      TOOLBOX_DOCKER_TAG={{coreos_toolbox_docker_tag}}
-  - path: "/home/root/.toolboxrc"
-    owner: root
     content: |
       TOOLBOX_DOCKER_IMAGE={{coreos_toolbox_docker_image}}
       TOOLBOX_DOCKER_TAG={{coreos_toolbox_docker_tag}}
@@ -323,6 +339,7 @@ Then use a playbook like this one (do not forget to edit vars with yours from th
   roles:
     - deimosfr.coreos-ansible
 
+# First deploy masters to ensure cluster will be ready before workers
 - name: coreos-bootstrap
   hosts: coreos-masters
   user: core
@@ -331,8 +348,6 @@ Then use a playbook like this one (do not forget to edit vars with yours from th
     - deimosfr.coreos-container-linux
   vars:
     coreos_image_base_url: "http://222.2.1.152:8000/coreos_images"
-  vars_files:
-    - "{{playbook_dir}}/../defaults/masters.yml"
 
 - name: coreos-bootstrap
   hosts: coreos-workers
@@ -342,8 +357,6 @@ Then use a playbook like this one (do not forget to edit vars with yours from th
     - deimosfr.coreos-container-linux
   vars:
     coreos_image_base_url: "http://222.2.1.152:8000/coreos_images"
-  vars_files:
-    - "{{playbook_dir}}/../defaults/workers.yml"
 ```
 
 Known issues

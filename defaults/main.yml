@@ -171,7 +171,7 @@ coreos_cloudinit:
     - name: mdmonitor.service
       command: stop
       enable: false
-    - name: etcd2.service
+    - name: etcd-member.service
       command: start
       enable: true
       drop-ins:
@@ -180,6 +180,14 @@ coreos_cloudinit:
             [Unit]
             Wants=network-online.target
             After=network-online.target
+        - name: 40-etcd-cluster.conf
+          content: |
+            [Service]
+            Environment="ETCD_ADVERTISE_CLIENT_URLS=http://{{priv_ip}}:2379"
+            Environment="ETCD_DISCOVERY=https://discovery.etcd.io/{{coreos_token}}"
+            Environment="ETCD_INITIAL_ADVERTISE_PEER_URLS=http://{{priv_ip}}:2380"
+            Environment="ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379"
+            Environment="ETCD_LISTEN_PEER_URLS=http://{{priv_ip}}:2380"
     - name: fleet.service
       command: start
     - name: docker.service
