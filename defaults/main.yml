@@ -13,7 +13,7 @@ coreos_generate_only: false
 # Download image locally to avoid downloading it for every nodes
 coreos_image_offline: false
 # Set CoreOS offline version (do not use current in offline mode)
-coreos_image_version: '1353.7.0'
+coreos_image_version: '1409.2.0'
 # Set image name to download
 coreos_image_name: 'coreos_production_ami_image.bin.bz2'
 # Define source image url to locally download image
@@ -84,14 +84,36 @@ coreos_bootstrap_cloudinit: true
 coreos_cloudinit:
   hostname: "{{inventory_hostname}}"
   coreos:
-    etcd2: "{{coreos_etcd_config}}"
     update:
       group: "{{coreos_channel}}"
       reboot-strategy: "{{coreos_reboot_strategy}}"
-    fleet: "{{coreos_fleet_config}}"
     flannel:
       interface: "{{coreos_public_ip}}"
     units:
+    - name: serial-getty@ttyS1.service
+      command: start
+      enable: true
+    - name: etcd-member.service
+      command: start
+      enable: true
+      drop-ins:
+        - name: 40-etcd-cluster.conf
+          content: |
+            [Service]
+            Environment="ETCD_IMAGE_TAG=v3.0.17"
+            Environment="ETCD_ADVERTISE_CLIENT_URLS=http://{{priv_ip}}:2379"
+            Environment="ETCD_DISCOVERY=https://discovery.etcd.io/{{coreos_token}}"
+            Environment="ETCD_INITIAL_ADVERTISE_PEER_URLS=http://{{priv_ip}}:2380"
+            Environment="ETCD_LISTEN_CLIENT_URLS=http://127.0.0.1:2379,http://{{priv_ip}}:2379"
+            Environment="ETCD_LISTEN_PEER_URLS=http://{{priv_ip}}:2380"
+    - name: flanneld.service
+      enable: true
+      command: start
+      drop-ins:
+      - name: 50-network-config.conf
+        content: |
+          [Service]
+          ExecStartPre=/usr/bin/etcdctl set /coreos.com/network/config '{ "Network": "{{coreos_flanneld_subnet}}" }'
     - name: prepare-data-drive.service
       command: start
       enable: true
@@ -145,9 +167,6 @@ coreos_cloudinit:
         Name={{coreos_private_if}}
         [Network]
         Address={{coreos_private_ip}}/24
-    - name: serial-getty@ttyS1.service
-      command: start
-      enable: true
     - name: iptables-restore.service
       command: start
       enable: true
@@ -188,17 +207,16 @@ coreos_cloudinit:
             Environment="ETCD_INITIAL_ADVERTISE_PEER_URLS=http://{{priv_ip}}:2380"
             Environment="ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379"
             Environment="ETCD_LISTEN_PEER_URLS=http://{{priv_ip}}:2380"
-    - name: fleet.service
-      command: start
     - name: docker.service
       command: start
-    - name: flanneld.service
       drop-ins:
-      - name: 50-network-config.conf
-        content: |
-          [Service]
-          ExecStartPre=/usr/bin/etcdctl set /coreos.com/network/config '{ "Network": "{{coreos_flanneld_subnet}}" }'
-      command: start
+        - name: 40-flannel.conf
+          content: |
+            [Unit]
+            Requires=flanneld.service
+            After=flanneld.service
+            [Service]
+            EnvironmentFile=/etc/kubernetes/cni/docker_opts_cni.env
     - name: docker-tcp.socket
       command: start
       enable: true
@@ -219,6 +237,10 @@ coreos_cloudinit:
     content: |
       TOOLBOX_DOCKER_IMAGE={{coreos_toolbox_docker_image}}
       TOOLBOX_DOCKER_TAG={{coreos_toolbox_docker_tag}}
+  - path: /etc/kubernetes/cni/docker_opts_cni.env
+    content: |
+      DOCKER_OPT_BIP=""
+      DOCKER_OPT_IPMASQ=""
   - path: /etc/modules-load.d/nf.conf
     content: nf_conntrack
   - path: /etc/sysctl.d/ipv4_forward.conf
@@ -235,7 +257,7 @@ coreos_cloudinit:
     content: |
       *filter
       :INPUT DROP [0:0]
-      :FORWARD DROP [0:0]
+      :FORWARD ACCEPT [0:0]
       :OUTPUT ACCEPT [0:0]
       -A INPUT -i lo -j ACCEPT
       -A INPUT -i {{coreos_private_if}} -j ACCEPT
