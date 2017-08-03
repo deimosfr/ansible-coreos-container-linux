@@ -1,7 +1,7 @@
 Ansible CoreOS Container Linux Role
 ===================================
 
-This role bootstrap a complete CoreOS cluster with Cloudinit or/and Ignition.
+This role bootstrap a complete CoreOS cluster with Cloudinit or/and Ignition. It also support Cloudinit config upgrade.
 
 [![asciicast](https://asciinema.org/a/amjt78r5c2gsz0c8gf5fk9p3z.png)](https://asciinema.org/a/amjt78r5c2gsz0c8gf5fk9p3z)
 
@@ -29,7 +29,7 @@ coreos_generate_only: false
 # Download image locally to avoid downloading it for every nodes
 coreos_image_offline: false
 # Set CoreOS offline version (do not use current in offline mode)
-coreos_image_version: '1409.2.0'
+coreos_image_version: '1409.7.0'
 # Set image name to download
 coreos_image_name: 'coreos_production_ami_image.bin.bz2'
 # Define source image url to locally download image
@@ -116,7 +116,7 @@ coreos_cloudinit:
         - name: 40-etcd-cluster.conf
           content: |
             [Service]
-            Environment="ETCD_IMAGE_TAG=v3.0.17"
+            Environment="ETCD_IMAGE_TAG=v3.2.4"
             Environment="ETCD_ADVERTISE_CLIENT_URLS=http://{{priv_ip}}:2379"
             Environment="ETCD_DISCOVERY=https://discovery.etcd.io/{{coreos_token}}"
             Environment="ETCD_INITIAL_ADVERTISE_PEER_URLS=http://{{priv_ip}}:2380"
@@ -206,23 +206,6 @@ coreos_cloudinit:
     - name: mdmonitor.service
       command: stop
       enable: false
-    - name: etcd-member.service
-      command: start
-      enable: true
-      drop-ins:
-        - name: 01-start-after-network.conf
-          content: |
-            [Unit]
-            Wants=network-online.target
-            After=network-online.target
-        - name: 40-etcd-cluster.conf
-          content: |
-            [Service]
-            Environment="ETCD_ADVERTISE_CLIENT_URLS=http://{{priv_ip}}:2379"
-            Environment="ETCD_DISCOVERY=https://discovery.etcd.io/{{coreos_token}}"
-            Environment="ETCD_INITIAL_ADVERTISE_PEER_URLS=http://{{priv_ip}}:2380"
-            Environment="ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379"
-            Environment="ETCD_LISTEN_PEER_URLS=http://{{priv_ip}}:2380"
     - name: docker.service
       command: start
       drop-ins:
@@ -272,7 +255,7 @@ coreos_cloudinit:
     owner: root:root
     content: |
       *filter
-      :INPUT DROP [0:0]
+      :INPUT ACCEPT [0:0]
       :FORWARD ACCEPT [0:0]
       :OUTPUT ACCEPT [0:0]
       -A INPUT -i lo -j ACCEPT
@@ -285,17 +268,13 @@ coreos_cloudinit:
       -A INPUT -p icmp -m icmp --icmp-type 0 -j ACCEPT
       -A INPUT -p icmp -m icmp --icmp-type 3 -j ACCEPT
       -A INPUT -p icmp -m icmp --icmp-type 11 -j ACCEPT
+      -A INPUT -j DROP
       COMMIT
   users:
     - name: 'core'
       ssh-authorized-keys:
       - "your rsa key"
 ```
-
-Dependencies
-------------
-
-deimosfr.coreos-ansible
 
 Example Playbook
 ----------------

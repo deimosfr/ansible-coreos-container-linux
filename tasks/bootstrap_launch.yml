@@ -1,6 +1,12 @@
 ---
 
-- name: launch coreos-install
+- name: check if coreos is already installed
+  command: "grep -c '/usr/share/oem' /proc/mounts"
+  ignore_errors: yes
+  changed_when: false
+  register: mounted_oem
+
+- name: launch coreos-install with coreos-install
   command: >
     coreos-install
     -d {{coreos_device_install}}
@@ -11,6 +17,15 @@
     {% if coreos_image_version %}-V {{coreos_image_version}}{% endif %}
     {{coreos_install_additional_options}}
   notify: reboot server
+  when: mounted_oem.rc == 1
+
+- name: update cloud-init configuration
+  command: >
+    coreos-cloudinit -from-file /tmp/coreos_cloudinit.yml
+  when:
+    - mounted_oem.rc == 0
+    - coreos_bootstrap_cloudinit
+    - config_updated.changed == True
 
 - name: eject cdrom
   command: eject

@@ -4,6 +4,7 @@
   template:
     src: "coreos_cloudinit.yml.j2"
     dest: "/tmp/coreos_cloudinit.yml"
+  register: config_updated
 
 - name: check cloudinit syntax
   command: "coreos-cloudinit -validate --from-file /tmp/coreos_cloudinit.yml"
