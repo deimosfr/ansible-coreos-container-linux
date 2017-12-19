@@ -54,6 +54,8 @@ coreos_timezone: "UTC"
 coreos_toolbox_docker_image: "debian"
 coreos_toolbox_docker_tag: "stable"
 
+coreos_openssh_port: 29410
+
 # Ignition
 coreos_bootstrap_ignition: false
 coreos_ignition:
@@ -212,6 +214,22 @@ coreos_cloudinit:
         [Install]
         WantedBy=sockets.target
   write_files:
+  - path: /etc/ssh/sshd_config
+    owner: root:root
+    permissions: 6400
+    content: |
+      # Use most defaults for sshd configuration.
+      Port {{coreos_openssh_port}}
+      UsePrivilegeSeparation sandbox
+      Subsystem sftp internal-sftp
+      ClientAliveInterval 180
+      UseDNS no
+      UsePAM yes
+      PermitRootLogin no
+      AllowUsers core
+      AuthenticationMethods publickey
+      PrintLastLog no # handled by PAM
+      PrintMotd no # handled by PAM
   - path: "/home/core/.toolboxrc"
     owner: core
     content: |
@@ -243,7 +261,7 @@ coreos_cloudinit:
       -A INPUT -i {{coreos_private_if}} -j ACCEPT
       -A INPUT -i tap0 -p all -j ACCEPT
       -A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
-      -A INPUT -p tcp -m tcp --dport 22 -j ACCEPT
+      -A INPUT -p tcp -m tcp --dport {{coreos_openssh_port}} -j ACCEPT -m comment --comment "OpenSSH"
       -A INPUT -p tcp -m tcp --dport 80 -j ACCEPT
       -A INPUT -p tcp -m tcp --dport 443 -j ACCEPT
       -A INPUT -p icmp -m icmp --icmp-type 0 -j ACCEPT
