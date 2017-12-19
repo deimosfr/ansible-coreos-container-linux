@@ -19,13 +19,14 @@
   notify: reboot server
   when: mounted_oem.rc == 1
 
-- name: update cloud-init configuration
+- name: apply cloud-init configuration
   command: >
     coreos-cloudinit -from-file /tmp/coreos_cloudinit.yml
   when:
     - mounted_oem.rc == 0
     - coreos_bootstrap_cloudinit
     - config_updated.changed == True
+  notify: save cloud-init config
 
 - name: eject cdrom
   command: eject

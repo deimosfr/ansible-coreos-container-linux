@@ -6,3 +6,12 @@
   poll: 0
   ignore_errors: true
   when: coreos_reboot_after_bootstrap
+
+- name: save cloud-init config
+  copy:
+    remote_src: yes
+    src: /tmp/coreos_cloudinit.yml
+    dest: /var/lib/coreos-install/user_data
+    mode: 0600
+    owner: root
+    group: root
