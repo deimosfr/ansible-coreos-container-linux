@@ -13,7 +13,7 @@ coreos_generate_only: false
 # Download image locally to avoid downloading it for every nodes
 coreos_image_offline: false
 # Set CoreOS offline version (do not use current in offline mode)
-coreos_image_version: '1409.7.0'
+coreos_image_version: '1576.4.0'
 # Set image name to download
 coreos_image_name: 'coreos_production_ami_image.bin.bz2'
 # Define source image url to locally download image
