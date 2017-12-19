@@ -34,9 +34,6 @@ coreos_private_if: "{{priv_if}}"
 # Define dedicated subnet for containers communication
 coreos_flanneld_subnet: "10.1.0.0/16"
 
-# Add fleet metadata
-coreos_fleet_metadata: "cluster=dev"
-
 # If true, will bootstrap the server (data may be lost),
 # else config files will be generated
 coreos_launch_bootstrap: true
