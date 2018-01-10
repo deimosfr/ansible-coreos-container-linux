@@ -102,7 +102,7 @@ coreos_cloudinit:
         - name: 40-etcd-cluster.conf
           content: |
             [Service]
-            Environment="ETCD_IMAGE_TAG=v3.2.4"
+            Environment="ETCD_IMAGE_TAG=v3.2.13"
             Environment="ETCD_ADVERTISE_CLIENT_URLS=http://{{priv_ip}}:2379"
             Environment="ETCD_DISCOVERY=https://discovery.etcd.io/{{coreos_token}}"
             Environment="ETCD_INITIAL_ADVERTISE_PEER_URLS=http://{{priv_ip}}:2380"
