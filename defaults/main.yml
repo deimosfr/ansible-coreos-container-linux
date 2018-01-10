@@ -242,6 +242,9 @@ coreos_cloudinit:
     content: |
       DOCKER_OPT_BIP=""
       DOCKER_OPT_IPMASQ=""
+  - path: /usr/share/oem/grub.cfg
+    content: |
+      set linux_append="ipv6.disable=1"
   - path: /etc/modules-load.d/nf.conf
     content: nf_conntrack
   - path: /etc/sysctl.d/ipv4_forward.conf
