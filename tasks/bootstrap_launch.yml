@@ -26,7 +26,6 @@
     - mounted_oem.rc == 0
     - coreos_bootstrap_cloudinit
     - config_updated.changed == True
-  notify: save cloud-init config
 
 - name: eject cdrom
   command: eject
