@@ -92,6 +92,9 @@ coreos_cloudinit:
     - name: serial-getty@ttyS1.service
       command: start
       enable: true
+    - name: update-engine.service
+      command: start
+      enable: true
     - name: etcd-member.service
       command: start
       enable: true
