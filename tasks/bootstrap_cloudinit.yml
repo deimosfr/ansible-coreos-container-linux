@@ -17,6 +17,17 @@
     flat: yes
   when: coreos_dump_ignition_cloudinit_config
 
+- name: create coreos-install folder if it does not exist
+  file:
+    path: /var/lib/coreos-install
+    mode: 0700
+    owner: root
+    group: root
+    state: directory
+  when:
+    - coreos_generate_only == False
+    - config_updated.changed == True
+
 - name: save cloud-init config
   copy:
     remote_src: yes
