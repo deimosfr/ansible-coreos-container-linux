@@ -29,4 +29,4 @@
     - "version.txt"
   become: false
   delegate_to: 127.0.0.1
-  when: coreos_image_downloaded | failed
+  when: coreos_image_downloaded is failed
